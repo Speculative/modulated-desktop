@@ -13,10 +13,9 @@ module.exports = {
     "react/react-in-jsx-scope": "off",
 
     // For now, have to specify @jsxImportSource at the top of every file using emotion
-    // https://github.com/emotion-js/emotion/issues/2041
-    // https://github.com/emotion-js/emotion/issues/2442
-    // https://github.com/facebook/create-react-app/issues/9847
-    // https://github.com/babel/babel/pull/12542
+    // https://github.com/emotion-js/emotion/issues/2474
+    // https://github.com/evanw/esbuild/issues/1172
+    // https://github.com/evanw/esbuild/issues/718
 
     // Auto-fixable, waiting for this to land
     // https://github.com/emotion-js/emotion/pull/2353
