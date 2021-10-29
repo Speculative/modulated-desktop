@@ -1,9 +1,8 @@
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import { useState, useReducer } from "react";
+import { useReducer } from "react";
 
-import "./drag";
 import { Window } from "./Window";
 
 interface WindowConfig {

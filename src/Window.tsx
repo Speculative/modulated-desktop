@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import { PropsWithChildren, useState } from "react";
+import { PropsWithChildren, useState, useRef, useEffect } from "react";
 
 export function Window({
   x,
@@ -24,10 +24,14 @@ export function Window({
   onFocus: () => void;
 }>) {
   const [dragging, setDragging] = useState(false);
-  const [[dragOffX, dragOffY], setDragOffset] = useState([0, 0] as [
-    number,
-    number
-  ]);
+
+  const onRepositionRef = useRef(onReposition);
+  const setDraggingRef = useRef(setDragging);
+
+  useEffect(() => {
+    onRepositionRef.current = onReposition;
+    setDraggingRef.current = setDragging;
+  }, [onReposition, setDragging]);
 
   return (
     <div
@@ -47,6 +51,8 @@ export function Window({
         border: 2px solid white;
         border-radius: 4px;
         background: black;
+
+        cursor: ${dragging ? "grabbing" : "auto"};
       `}
       onMouseDown={onFocus}
     >
@@ -61,18 +67,30 @@ export function Window({
           flex-direction: row;
           justify-content: space-between;
           align-items: center;
+
+          cursor: ${dragging ? "grabbing" : "grab"};
         `}
         onMouseDown={(e) => {
           setDragging(true);
-          setDragOffset([e.clientX - x, e.clientY - y]);
+
+          const offX = e.clientX - x;
+          const offY = e.clientY - y;
+
+          // We want dragging to be handled globally
+          // Otherwise, you can drag too quickly and get outside the title bar
+          const handleMouseMove = (e: MouseEvent) => {
+            onRepositionRef.current(e.clientX - offX, e.clientY - offY);
+          };
+          const handleMouseUp = () => {
+            setDraggingRef.current(false);
+
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+          };
+
+          document.addEventListener("mousemove", handleMouseMove);
+          document.addEventListener("mouseup", handleMouseUp);
         }}
-        onMouseUp={() => setDragging(false)}
-        // This should be global, otherwise you can drag too fast and escape this box
-        onMouseMove={
-          dragging
-            ? (e) => onReposition(e.clientX - dragOffX, e.clientY - dragOffY)
-            : undefined
-        }
       >
         Window
         <nav>

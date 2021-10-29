@@ -1,7 +1,6 @@
 import {
   Observable,
   Subject,
-  Subscription,
   skipUntil,
   takeUntil,
   filter,
@@ -71,38 +70,3 @@ function between<TStreamContent>(
     repeat()
   );
 }
-
-(window as any).startDrag = startDrag;
-(window as any).continueDrag = continueDrag;
-(window as any).stopDrag = stopDrag;
-(window as any).dragMoves = dragMoves$;
-
-const aSubject$ = new Subject<any>();
-aSubject$.subscribe((e) => console.log("Subject got something", e));
-
-const firstProducer$ = new Subject<any>();
-function sendOne(payload: any) {
-  firstProducer$.next(payload);
-}
-
-const secondProducer$ = new Subject<any>();
-function sendTwo(payload: any) {
-  secondProducer$.next(payload);
-}
-
-firstProducer$.subscribe(aSubject$);
-
-let subscription: Subscription | null = null;
-function demandSubscribe() {
-  subscription = secondProducer$.subscribe(aSubject$);
-}
-
-function demandUnsubscribe() {
-  subscription?.unsubscribe();
-  subscription = null;
-}
-
-(window as any).sendOne = sendOne;
-(window as any).sendTwo = sendTwo;
-(window as any).demandSubscribe = demandSubscribe;
-(window as any).demandUnsubscribe = demandUnsubscribe;
