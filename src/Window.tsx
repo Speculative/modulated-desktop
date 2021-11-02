@@ -8,8 +8,12 @@ import {
   useEffect,
   Fragment,
 } from "react";
+import { observer } from "mobx-react-lite";
 import { EmotionIcon } from "@emotion-icons/emotion-icon";
 import { Workflow, X, ChevronLeft, Circle } from "emotion-icons/octicons";
+
+import { PortSpec, PortType } from "./store/portSpec";
+import { appStore } from "./store/apps";
 
 function TitleButton({
   extraCss,
@@ -109,7 +113,97 @@ const plugName = css`
   margin-left: 5px;
 `;
 
-export function Window({
+const fakePortSpec = {
+  inputs: {
+    x: PortType.Number,
+    y: PortType.Number,
+  },
+  outputs: {
+    x: PortType.Number,
+    y: PortType.Number,
+  },
+};
+
+function PlugPanel({ portSpec }: { portSpec: PortSpec }) {
+  return (
+    <div
+      css={css`
+        padding: 8px;
+      `}
+    >
+      <h1
+        css={css`
+          font-size: 20px;
+          font-weight: normal;
+        `}
+      >
+        Inputs
+      </h1>
+      <hr
+        css={css`
+          margin-bottom: 5px;
+        `}
+      />
+      <ul
+        css={css`
+          list-style: none;
+        `}
+      >
+        {Object.entries(portSpec.inputs).map(([portName]) => (
+          <li key={portName} css={plugLine}>
+            <Circle css={plug} />
+            <span css={plugName}>{portName}</span>
+          </li>
+        ))}
+      </ul>
+      <h1
+        css={css`
+          font-size: 20px;
+          font-weight: normal;
+          margin-top: 10px;
+        `}
+      >
+        Outputs
+      </h1>
+      <hr
+        css={css`
+          margin-bottom: 5px;
+        `}
+      />
+      <ul
+        css={css`
+          list-style: none;
+        `}
+      >
+        {Object.entries(portSpec.outputs).map(([portName]) => (
+          <li key={portName} css={plugLine}>
+            <Circle css={plug} />
+            <span css={plugName}>{portName}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export const Window = observer(
+  ({ children, windowId }: PropsWithChildren<{ windowId: string }>) => {
+    const windowPosition = appStore.windows.window(windowId);
+
+    return (
+      <WindowInternal
+        {...windowPosition}
+        onReposition={(pos) => appStore.windows.move(windowId, pos)}
+        onFocus={() => appStore.windows.focus(windowId)}
+        onClose={() => appStore.unregisterAppInstance(windowId)}
+      >
+        {children}
+      </WindowInternal>
+    );
+  }
+);
+
+function WindowInternal({
   x,
   y,
   z,
@@ -125,7 +219,7 @@ export function Window({
   z: number;
   w: number;
   h: number;
-  onReposition: (x: number, y: number) => void;
+  onReposition: (pos: [number, number]) => void;
   onClose: () => void;
   onFocus: () => void;
 }>) {
@@ -151,7 +245,7 @@ export function Window({
     // We want dragging to be handled globally
     // Otherwise, you can drag too quickly and get outside the title bar
     const handleMouseMove = (e: MouseEvent) => {
-      onRepositionRef.current(e.clientX - offX, e.clientY - offY);
+      onRepositionRef.current([e.clientX - offX, e.clientY - offY]);
     };
     const handleMouseUp = () => {
       setDraggingRef.current(false);
@@ -229,7 +323,7 @@ export function Window({
         <div
           css={css`
             position: absolute;
-            left: ${x + w}px;
+            left: ${x + w + 2}px;
             top: ${y}px;
             z-index: ${z};
             min-width: 100px;
@@ -265,67 +359,7 @@ export function Window({
             }
             onDragStart={handleDrag}
           >
-            <div
-              css={css`
-                padding: 8px;
-              `}
-            >
-              <h1
-                css={css`
-                  font-size: 20px;
-                  font-weight: normal;
-                `}
-              >
-                Inputs
-              </h1>
-              <hr
-                css={css`
-                  margin-bottom: 5px;
-                `}
-              />
-              <ul
-                css={css`
-                  list-style: none;
-                `}
-              >
-                <li css={plugLine}>
-                  <Circle css={plug} />
-                  <span css={plugName}>X</span>
-                </li>
-                <li css={plugLine}>
-                  <Circle css={plug} />
-                  <span css={plugName}>Y</span>
-                </li>
-              </ul>
-              <h1
-                css={css`
-                  font-size: 20px;
-                  font-weight: normal;
-                  margin-top: 10px;
-                `}
-              >
-                Outputs
-              </h1>
-              <hr
-                css={css`
-                  margin-bottom: 5px;
-                `}
-              />
-              <ul
-                css={css`
-                  list-style: none;
-                `}
-              >
-                <li css={plugLine}>
-                  <Circle css={plug} />
-                  <span css={plugName}>X</span>
-                </li>
-                <li css={plugLine}>
-                  <Circle css={plug} />
-                  <span css={plugName}>Y</span>
-                </li>
-              </ul>
-            </div>
+            <PlugPanel portSpec={fakePortSpec} />
           </Frame>
         </div>
       )}

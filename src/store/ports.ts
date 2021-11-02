@@ -1,5 +1,5 @@
-import { Observable, Observer, Subject, Subscription } from "rxjs";
-import { types, SnapshotOrInstance } from "mobx-state-tree";
+import { Subject, Subscription } from "rxjs";
+import { types, Instance } from "mobx-state-tree";
 import { observable } from "mobx";
 
 export function portID(windowName: string, portName: string) {
@@ -8,10 +8,8 @@ export function portID(windowName: string, portName: string) {
 
 const PortConfig = types.model({
   id: types.identifier,
-  type: types.enumeration(["number"]),
+  type: types.literal("Number"), // types.enumeration(["Number"]),
 });
-
-export type IPortConfig = SnapshotOrInstance<typeof PortConfig>;
 
 const Connection = types.model({
   from: types.reference(PortConfig),
@@ -26,8 +24,8 @@ export const Ports = types
   })
   .volatile(() => ({
     // Port ID -> Subject
-    toStreams: observable.map<string, Observer<unknown>>({}),
-    fromStreams: observable.map<string, Observable<unknown>>({}),
+    toStreams: observable.map<string, Subject<unknown>>({}),
+    fromStreams: observable.map<string, Subject<unknown>>({}),
   }))
   .views((self) => {
     function connectionsTo(portID: string) {
@@ -81,7 +79,7 @@ export const Ports = types
       delete subscriptions[id];
     }
 
-    function registerInput(portConfig: SnapshotOrInstance<typeof PortConfig>) {
+    function registerInput(portConfig: Instance<typeof PortConfig>) {
       if (self.inputs.has(portConfig.id)) {
         throw new Error(
           `Cannot re-register existing input port ${portConfig.id}`
@@ -104,7 +102,7 @@ export const Ports = types
       self.toStreams.delete(toPort);
     }
 
-    function registerOutput(portConfig: SnapshotOrInstance<typeof PortConfig>) {
+    function registerOutput(portConfig: Instance<typeof PortConfig>) {
       if (self.outputs.has(portConfig.id)) {
         throw new Error(
           `Cannot re-register existing output port ${portConfig.id}`
@@ -136,5 +134,3 @@ export const Ports = types
       unregisterOutput,
     };
   });
-
-export const portStore = Ports.create();
